@@ -53,12 +53,16 @@ class Bk:
         self.c.execute("INSERT INTO Settings VALUES('timeLimit','0')")
         self.c.execute("INSERT INTO Settings VALUES('startedAd','0')")
         
-        self.c.execute("CREATE TABLE Players(player_name TEXT)")
-        for i in range(0,playersNb):
-            self.c.execute("INSERT INTO Players VALUES('Player %i')" % i+1)
+        #self.c.execute("CREATE TABLE Players(player_name TEXT)")
+        #for i in range(0,playersNb):
+        #    self.c.execute("INSERT INTO Players VALUES('Player %d')" % str(i+1))
         
-        self.c.execute("CREATE TABLE Objective(objective_player TEXT, objective_mission TEXT, objective_question TEXT, objective_status TEXT)")
-        self.c.execute("CREATE TABLE ObjectiveHints(objective_id INT, objective_player TEXT, objective_hint TEXT)")
+        #self.c.execute("CREATE TABLE Objective(objective_player TEXT, objective_mission TEXT, objective_question TEXT, objective_status TEXT)")
+        #self.c.execute("CREATE TABLE ObjectiveHints(objective_id INT, objective_player TEXT, objective_hint TEXT)")
+        
+        self.c.execute("CREATE TABLE Missions(mission_name TEXT, p1 TEXT, p2 TEXT, p3 TEXT, p4 TEXT, p1Color INT, p2Color INT, p3Color INT, p4Color INT, mission_points INT, mission_level INT, assigned INT)")
+        
+        self.populateMissions()
         
         self.c.execute("CREATE TABLE KingMoves(message TEXT, image_url TEXT, releaseTime INT)")
         
@@ -66,16 +70,65 @@ class Bk:
         
         self.populateKingMoves()
         
-        """
-        for i in range (1, playersNb+1):
-            missionOder, missionQuestion, missionHints = self.createMission(playerId=i)
-            self.c.execute("INSERT INTO Objective VALUES('%s', '%s','%s', 'RUNNING')" % (i, missionOder, missionQuestion))
-            lastMissionId = self.c.lastrowid
-            
-            for h in missionHints:
-                self.c.execute("INSERT INTO ObjectiveHints VALUES(%i, '%s', '%s')" % (lastMissionId, i, h))
-        """
+        
         self.con.commit()
+    def populateMissions(self):
+        
+           
+        #      'mission Name'   , 'Piece1', 'Piece2', 'Piece3', 'Piece4', Points, difficulty
+        
+        missions = [
+            #['',         '','','','',   1  , 1 ],
+            ['',         'F','F','C','P',    5  , 4  ],
+            ['',         'F','F','T','P',    5  , 4  ],
+            ['',         'F','F','P','P',    5  , 4  ],
+            ['',         'T','T','P','P',    5  , 4  ],
+            ['',         'T','T','C','P',    5  , 4  ],
+            ['',         'T','T','F','P',    5  , 4  ],
+            ['',         'C','C','P','P',    5  , 4  ],
+            ['',         'C','C','F','P',    5  , 4  ],
+            ['',         'C','C','T','P',    5  , 4  ],
+            ['',         'C','T','F','P',    3  , 3  ],
+            ['',         'R','C','F','P',    3  , 3  ],
+            ['',         'R','T','C','P',    3  , 3  ],
+            ['',         'T','F','P','P',    3  , 3  ],
+            ['',         'R','T','F','P',    3  , 3  ],
+            ['',         'R','C','P','P',    2  , 2  ],
+            ['',         'R','T','P','P',    2  , 2  ],
+            ['',         'C','F','P','P',    2  , 2  ],
+            ['',         'R','F','P','P',    2  , 2  ],
+            ['',         'T','C','P','P',    2  , 2  ],
+            ['',         'F','P','P','P',    1  , 1  ],
+            ['',         'F','P','P','P',    1  , 1  ],
+            ['',         'R','P','P','P',    1  , 1  ],
+            ['',         'C','P','P','P',    1  , 1  ],
+            ['',         'T','P','P','P',    1  , 1  ],
+            ['',         'T','P','P','P',    1  , 1  ],
+            ['',         'C','P','P','P',    1  , 1  ],
+            ['',         'R','P','P','P',    1  , 1  ],
+
+        ]
+        
+        for m in missions:
+            # Couleur aleatoire sur une des pieces
+            # 0 = black, 1= white, 2 = nocolor
+            colors = [2,2,2,2]
+            piecesToPick = [0,1,2,3]
+            random.shuffle(piecesToPick)
+            
+            colors[piecesToPick[0]] = random.randint(0,1)
+            
+            # Pieces 
+            pieces = {'P': 0,'T':1, 'C':2, 'F':3, 'R': 4}
+            p1 = pieces[m[1]]
+            p2 = pieces[m[2]]
+            p3 = pieces[m[3]]
+            p4 = pieces[m[4]]
+            
+            
+            self.c.execute("INSERT INTO Missions VALUES('%s', %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, 0)" % (m[0], p1, p2, p3, p4, colors[0], colors[1], colors[2], colors[3], m[5], m[6]))
+        
+            
     def canWeStartTheGame(self):
         # Get the current Mission
         print 'Checking if game can start'
@@ -100,15 +153,17 @@ class Bk:
             self.nextTurn()
        
     def getMissions(self):
+        
         self.c.execute("SELECT ROWID, objective_mission, objective_question, objective_status FROM Objective WHERE objective_player = '%s'" % self.player)
         return self.c.fetchall()
         
         
     def getHint(self):
-        # GET HINT
+        # GET HINT : ABANDON
         return ''
         self.c.execute("SELECT objective_hint FROM ObjectiveHints WHERE objective_player != '%s' ORDER BY RANDOM() LIMIT 1" % self.player)
         return self.c.fetchone()[0]
+        
         
     
     def getNewMission(self, difficulty=1):
@@ -118,7 +173,7 @@ class Bk:
         self.con.commit()
         
     def createMission(self,missionType=None, playerId=0):
-        # CREATE MISSION
+        # CREATE MISSION : ABANDON
         figures = ["White King","White Queen","White Fool","White Horse","White Tower","White Peon","Black King","Black Queen","Black Fool","Black Horse","Black Tower","Black Peon"]
         
         if not missionType:
@@ -218,7 +273,10 @@ class Bk:
             self.c.execute("INSERT INTO KingMoves VALUES('%s','',0)" % c)
         self.con.commit()
     
-        
+    def currentPlay(self):
+        self.c.execute('SELECT meta_value from Settings WHERE meta_name = "CurrentPlay"')
+        data = self.c.fetchone()[0]
+        return data
     def whichTurnIsIt(self):
         # WHICH TURN
         self.c.execute('SELECT meta_value from Settings WHERE meta_name = "CurrentPlayer"')

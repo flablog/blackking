@@ -7,7 +7,7 @@
         BlackKing
     </title>
     
-    
+    <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
 
     <script src="/static/js/jquery-2.0.2.min.js" type="text/javascript"></script>
     <script src="/static/js/bootstrap.min.js" type="text/javascript"></script>
@@ -28,10 +28,11 @@
       <!-- Begin page content -->
         <div class="container">
         
+            <!--
             <div class="row">  
                 <div class="col-xs-5"> 
-        
-                    <p>Hello player {{ playerId }}! <span id="TURN">Is it my turn ?</span></p>
+            -->
+                    <p><span id="TURN">Is it my turn ?</span></p>
                     
                     
                     <div id="POLLS">
@@ -42,7 +43,8 @@
                     
                     </div>
                     <div id="KINGMOVE" lastMove="0">
-                    Hello says the king
+                    
+                    <div class="alert alert-info"><span id="KINGMOVE_MSG">Let's see, where is the king?<span></div>
                     
                     </div>
                     <div id="MISSIONS">
@@ -51,10 +53,11 @@
                     <div id="INFOS">
                     
                     </div>
-                    
+              <!--      
                     
                 </div>
             </div>
+            -->
         <!-- 
         <div class="page-header">
           <h1>Sticky footer</h1>
@@ -63,7 +66,10 @@
         <p>Use <a href="../sticky-footer-navbar">the sticky footer with a fixed navbar</a> if need be, too.</p>
        </div>
         -->
-      
+        
+        <p>Hello player {{ playerId }}! <span id="currentTurn" currentTurn="42">Waiting to start the game?</span></p>
+        
+        
         </div>
     </div>
 

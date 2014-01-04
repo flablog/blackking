@@ -9,13 +9,19 @@ $(document).ready(function(){
             
             var items = [];
             $.each( data, function( key, val ) {
+                
+                
                 // King MOVE
                 
                 
                 if (key == 'KINGMOVE_LASTMSG'){
-                    if (val > $("#KINGMOVE").attr('lastMove')){
-                        $("#KINGMOVE").html(data["KINGMOVE_MSG"]);
-                        
+                    if (val > parseInt($("#KINGMOVE").attr('lastMove'))){
+                        $("#KINGMOVE_MSG").html(data["KINGMOVE_MSG"]);
+                        // probablement changement du current turn au passage
+                        if (data["CURRENTTURN"]>0){
+                            $("#currentTurn").html("It's turn " + data["CURRENTTURN"]);
+                            $('#currentTurn').attr('currentTurn', data["CURRENTTURN"]);
+                        }
                     }
                     
                 }

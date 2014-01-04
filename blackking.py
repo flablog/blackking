@@ -41,6 +41,11 @@ class UserUpdateDashboard(tornado.web.RequestHandler):
         bk = blackking.Bk(player = playerId)
         
         currentTurn = bk.whichTurnIsIt()
+        
+        
+        obj["CURRENTTURN"]=str(bk.currentPlay())
+        
+        
         if currentTurn == '0':
             # Verifier que tout le monde a pas une mission
             bk.canWeStartTheGame()
