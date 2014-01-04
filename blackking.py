@@ -23,9 +23,9 @@ class MainHandler(tornado.web.RequestHandler):
         self.write("</ul>")
 
 class NewGameHandler(tornado.web.RequestHandler):
-    def get(self, userNb):
+    def get(self, playersNb):
         bk = blackking.Bk()
-        bk.newGame(userNb)
+        bk.newGame(playersNb)
         self.write("New game created")
 
 class UserDashboardHandler(tornado.web.RequestHandler):
@@ -41,8 +41,16 @@ class UserUpdateDashboard(tornado.web.RequestHandler):
         bk = blackking.Bk(player = playerId)
         
         currentTurn = bk.whichTurnIsIt()
+        if currentTurn == '0':
+            # Verifier que tout le monde a pas une mission
+            bk.canWeStartTheGame()
+            currentTurn = bk.whichTurnIsIt()
+            
         if currentTurn == playerId:
             obj["TURN"] = "<strong>It's your turn! </strong><button id='IAMDONE' class='btn btn-success btn-xs'>I'm done !</button>"
+        elif currentTurn == '0':
+            obj["TURN"] = "We are waiting everyone to get a mission to start"
+            bk.canWeStartTheGame()
         else:
             obj["TURN"] = "It's player %s turn" % currentTurn
         
@@ -50,15 +58,32 @@ class UserUpdateDashboard(tornado.web.RequestHandler):
         missions = bk.getMissions()
         missions.reverse()
         
+        hasMission = False
         for m in missions:
             obj["MISSION_MSG_%i" % m[0]] = m[1]
             obj["MISSION_STS_%i" % m[0]] = m[3]
+            if m[3] != "SUCCESS":
+                hasMission = True
+        if not hasMission:
+            obj["NEWMISSION"]= "YES"
+        else:
+            obj["NEWMISSION"] = "NO"
+        
+        #Last King Move
+        lastKingMove = bk.getLastKingMove()
+        print lastKingMove
+        
+        obj["KINGMOVE_MSG"] = lastKingMove[0]
+        obj["KINGMOVE_IMGSRC"] = lastKingMove[1]
+        obj["KINGMOVE_LASTMSG"] = lastKingMove[2]
         
         # random secret info
         # A chance out of 100
+        """
         if (random.random() < .01):
             hint = bk.getHint()
             obj["INFO"] = "<strong>Secret information:</strong> %s" % hint
+        """
         print obj
         self.write(json_encode(obj))
 
@@ -72,7 +97,12 @@ class UserTurnDoneHandler(tornado.web.RequestHandler):
             self.write('OK')
         else:
             self.write('WRONG USER')
-
+class UserGetMissionHandler(tornado.web.RequestHandler):
+    def get(self,playerId):
+        print 'NEW MISSION for PLAYER', playerId
+        bk = blackking.Bk(player = playerId)
+        bk.getNewMission()
+        self.write('OK')
     
 class Application(tornado.web.Application):
     def __init__(self):
@@ -81,6 +111,7 @@ class Application(tornado.web.Application):
             (r"/user/(.*)/dashboard/", UserDashboardHandler),
             (r"/user/(.*)/updateDashboard/", UserUpdateDashboard),
             (r"/user/(.*)/turnDone/", UserTurnDoneHandler),
+            (r"/user/(.*)/getMission/", UserGetMissionHandler),
             
             (r"/new/(.*)/", NewGameHandler),
             
