@@ -1,0 +1,92 @@
+/* BLACK KING S MOOD MAIN CSS */
+
+.boldText{
+   font-weight:bold;
+}
+
+.notDisplayed{
+    display:none;
+}
+
+#bk_main_topMenu{
+    height:200px;
+
+    background-image: url(../img/bk_main_headerbkg.svg);
+}
+
+
+#bk_main_topMenu_haut{
+    /* border: 1px solid;
+    border-color:#f00;*/
+
+    height:60px;
+    width:70px;
+    position:relative;
+    left:125px;
+    top:15px;
+        
+}
+
+#bk_main_topMenu_left{
+    /*border: 1px solid;
+    border-color:#0f0;*/
+
+    height:40px;
+    width:70px;
+    position:relative;
+    left:75px;
+    top:20px;
+    
+        
+}
+
+#bk_main_topMenu_right{
+    /*border: 1px solid;
+    border-color:#00f;*/
+
+    height:40px;
+    width:70px;
+    position:relative;
+    left:170px;
+    top:-20px;
+    
+        
+}
+
+#bk_main_topMenu_bottom{
+    /*border: 1px solid;
+    border-color:#00f;*/
+
+    height:60px;
+    width:100px;
+    position:relative;
+    left:110px;
+    top:-5px;
+    
+        
+}
+
+
+#bk_main_play{
+     /*border: 1px solid;
+    border-color:#00f;*/
+    
+}
+
+#bk_main_play_table{
+margin:0 auto;
+
+    border:0px solid;
+    border-collapse:collapse;
+    min-width:300px;
+}
+
+
+#blackText,tr{
+    height:100px;
+}
+
+#bk_main_play_joinTd, #bk_main_play_newTd{
+    background-image: url(../img/menuSquareBigOrange.svg);
+    width:99px;
+}

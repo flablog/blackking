@@ -32,7 +32,9 @@ class UserDashboardHandler(tornado.web.RequestHandler):
     def get(self, playerId):
         self.render('dashboard.html', playerId=playerId)
         
-        
+class CSSTestHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.render('bk_main.html')
         
 class UserUpdateDashboard(tornado.web.RequestHandler):
     def get(self, playerId):
@@ -60,19 +62,18 @@ class UserUpdateDashboard(tornado.web.RequestHandler):
             obj["TURN"] = "It's player %s turn" % currentTurn
         
         # Current Mission
-        missions = bk.getMissions()
-        missions.reverse()
         
+        missions = bk.getMissions()
+        obj["MISSIONS"] = missions
         hasMission = False
         for m in missions:
-            obj["MISSION_MSG_%i" % m[0]] = m[1]
-            obj["MISSION_STS_%i" % m[0]] = m[3]
-            if m[3] != "SUCCESS":
-                hasMission = True
+            if m["status"] in [1,2]: hasMission = True
+        
         if not hasMission:
             obj["NEWMISSION"]= "YES"
         else:
             obj["NEWMISSION"] = "NO"
+        
         
         #Last King Move
         lastKingMove = bk.getLastKingMove()
@@ -89,7 +90,31 @@ class UserUpdateDashboard(tornado.web.RequestHandler):
             hint = bk.getHint()
             obj["INFO"] = "<strong>Secret information:</strong> %s" % hint
         """
-        print obj
+        
+        # Get polls
+        polls = []
+        pollsToCheck = bk.getMyPolls()
+        for m in pollsToCheck:
+            mission = bk.getMissions(missionId=m)[0]
+            polls.append(mission)
+        print "PLAYER", playerId, "POLLS:", polls
+        obj["POLLS"] = polls
+        
+        
+        # Scores
+        
+        scores = bk.getScores()
+        score = "<ul>"
+        scoreOrder = []
+        for s in scores.keys():
+            scoreOrder.append([scores[s], s])
+        scoreOrder.sort()
+        scoreOrder.reverse()
+        for s in scoreOrder:
+            score += "<li>Player %i : %i points</li>" % (s[1], s[0])
+        score += "</ul>"
+        obj["SCORE"] = score
+        #print obj
         self.write(json_encode(obj))
 
         
@@ -103,12 +128,27 @@ class UserTurnDoneHandler(tornado.web.RequestHandler):
         else:
             self.write('WRONG USER')
 class UserGetMissionHandler(tornado.web.RequestHandler):
-    def get(self,playerId):
+    def get(self,playerId, difficulty):
         print 'NEW MISSION for PLAYER', playerId
         bk = blackking.Bk(player = playerId)
-        bk.getNewMission()
+        bk.assignNewMission(int(difficulty))
         self.write('OK')
-    
+
+
+class UserCallPollHandler(tornado.web.RequestHandler):
+    def get(self,playerId, missionId):
+            print "Player ", playerId, "call POLL for Mission", missionId
+            bk = blackking.Bk(player = playerId)
+            bk.callForPoll(missionId = missionId)
+            
+            self.write('OK')
+class UserVotePollHandler(tornado.web.RequestHandler):
+    def get(self,playerId, missionId, vote):
+            print "Player ", playerId, "vote POLL for Mission", missionId, vote
+            bk = blackking.Bk(player = playerId)
+            bk.votePoll(missionId = missionId, vote=vote)
+            
+            self.write('OK')   
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
@@ -116,9 +156,12 @@ class Application(tornado.web.Application):
             (r"/user/(.*)/dashboard/", UserDashboardHandler),
             (r"/user/(.*)/updateDashboard/", UserUpdateDashboard),
             (r"/user/(.*)/turnDone/", UserTurnDoneHandler),
-            (r"/user/(.*)/getMission/", UserGetMissionHandler),
+            (r"/user/(.*)/getMission/(.*)/", UserGetMissionHandler),
+            (r"/user/(.*)/callPoll/(.*)/", UserCallPollHandler),
+            (r"/user/(.*)/votePoll/(.*)/(.*)/", UserVotePollHandler),
             
             (r"/new/(.*)/", NewGameHandler),
+            (r"/CSSTest/", CSSTestHandler),
             
         ]
                 

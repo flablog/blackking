@@ -13,7 +13,7 @@ class Bk:
         self.c = None
         self.con = None
         self.game = "67HT7HT"
-        self.player = player
+        self.player = int(player)
         
         self.connect()
         
@@ -28,22 +28,22 @@ class Bk:
         self.c = self.con.cursor()    
     
     def newGame(self,playersNb=4):
-        # NEW GAME
+        # NEW GAME : create the database
         playersNb = int(playersNb)
-        self.closeCon()
         
+        # Destroying db if it exists
+        self.closeCon()
         if os.path.exists(gameRoot + self.game + '.db'):
             os.remove(gameRoot+ self.game + '.db')
-            
+        
+        # New connection : creates a new Db
         self.connect()
-           
+        
         self.c.execute('SELECT SQLITE_VERSION()')
-        
         data = self.c.fetchone()
-        
         print "SQLite version: %s" % data
         
-        
+        # Settings 
         self.c.execute("CREATE TABLE Settings(meta_name TEXT, meta_value TEXT)")
         self.c.execute("INSERT INTO Settings VALUES('Players','%i')" % playersNb)
         self.c.execute("INSERT INTO Settings VALUES('CurrentPlayer','0')")
@@ -53,25 +53,291 @@ class Bk:
         self.c.execute("INSERT INTO Settings VALUES('timeLimit','0')")
         self.c.execute("INSERT INTO Settings VALUES('startedAd','0')")
         
-        #self.c.execute("CREATE TABLE Players(player_name TEXT)")
-        #for i in range(0,playersNb):
-        #    self.c.execute("INSERT INTO Players VALUES('Player %d')" % str(i+1))
+        self.c.execute("INSERT INTO Settings VALUES('Player1Color','0')")
+        self.c.execute("INSERT INTO Settings VALUES('Player2Color','0')")
+        self.c.execute("INSERT INTO Settings VALUES('Player3Color','0')")
+        self.c.execute("INSERT INTO Settings VALUES('Player4Color','0')")
+        self.c.execute("INSERT INTO Settings VALUES('Player5Color','0')")
         
-        #self.c.execute("CREATE TABLE Objective(objective_player TEXT, objective_mission TEXT, objective_question TEXT, objective_status TEXT)")
-        #self.c.execute("CREATE TABLE ObjectiveHints(objective_id INT, objective_player TEXT, objective_hint TEXT)")
         
-        self.c.execute("CREATE TABLE Missions(mission_name TEXT, p1 TEXT, p2 TEXT, p3 TEXT, p4 TEXT, p1Color INT, p2Color INT, p3Color INT, p4Color INT, mission_points INT, mission_level INT, assigned INT)")
-        
+        # Create Missions
+        self.c.execute("CREATE TABLE Missions(mission_name TEXT, p1 INT, p2 INT, p3 INT, p4 INT, p1Color INT, p2Color INT, p3Color INT, p4Color INT, mission_points INT, mission_level INT, assigned INT, status INT)")
+        # Missions status 0 : not assigned, 1, running, 2 poll, 3 success
         self.populateMissions()
+        #self.populateMissions()
+        #self.populateMissions()
         
+        # Mission Polls
+        self.c.execute("CREATE TABLE MissionPoll(missionId INT, player INT, vote INT, result INT)")
+        
+        # King Moves
         self.c.execute("CREATE TABLE KingMoves(message TEXT, image_url TEXT, releaseTime INT)")
+        self.c.execute("INSERT INTO KingMoves VALUES('The King is awaking and getting ready for a new day...','',%i)" % time.time())
         
-        self.c.execute("INSERT INTO KingMoves VALUES('The King is going to walk on his castle','',%i)" % time.time())
-        
+        self.populateKingMoves()
+        self.populateKingMoves()
         self.populateKingMoves()
         
         
         self.con.commit()
+    def getScores(self):
+        self.c.execute('SELECT meta_value from Settings WHERE meta_name = "Players"')
+        players = int(self.c.fetchone()[0])
+        scores = {}
+        for p in range(1, players+1):
+            scores[p] = 0
+        
+        self.c.execute('SELECT assigned, mission_points FROM Missions WHERE assigned != 0 and status == 3')
+        for r in self.c.fetchall():
+            scores[r[0]] += r[1]
+            
+        return scores
+        
+               
+    def votePoll(self, missionId, vote):
+        #CREATE TABLE MissionPoll(missionId INT, player INT, vote INT, result INT)
+        self.c.execute('UPDATE MissionPoll SET vote = 1, result= %i WHERE missionId = %i and player= %i' %  (int(vote), int(missionId), self.player) )
+        self.con.commit()
+        
+        # Check if mission is validated
+        self.c.execute('SELECT vote, result from MissionPoll WHERE missionId = %i' % int(missionId))
+        everyoneHasVote = True
+        pollValidated = True
+        print '\nchecking Vote'
+        for r in self.c.fetchall():
+            print r
+            if r[0] == 0:
+                everyoneHasVote = False
+            else:
+                if r[1] == 0:
+                    pollValidated = False
+        print "everyoneHasVote", everyoneHasVote, "pollValidated", pollValidated
+        print ''
+        if everyoneHasVote and pollValidated:
+            print "MISSION VALIDATED :", missionId
+            self.c.execute('UPDATE Missions SET status = 3 WHERE ROWID = %i' %  int(missionId) )
+            self.c.execute('DELETE FROM MissionPoll WHERE  missionId = %i' %  int(missionId) )
+            self.con.commit()
+        if everyoneHasVote and not pollValidated:
+            print "MISSION NOT VALIDATED :", missionId
+            self.c.execute('UPDATE Missions SET status = 1 WHERE ROWID = %i' %  int(missionId) )
+            self.c.execute('DELETE FROM MissionPoll WHERE  missionId = %i' %  int(missionId) )
+            self.con.commit()
+            
+    
+    def getMyPolls(self):
+        self.c.execute('SELECT missionId from MissionPoll WHERE player = %i and vote =0' % self.player)
+        missionsToCheck = []
+        for r in self.c.fetchall():
+            missionsToCheck.append(r[0])
+        return missionsToCheck
+        
+    def callForPoll(self, missionId):
+        self.c.execute('SELECT meta_value from Settings WHERE meta_name = "Players"')
+        players = int(self.c.fetchone()[0])
+        
+        # Check IF poll is not running already
+        
+        self.c.execute('UPDATE Missions SET status = 2 WHERE ROWID = %i' %  int(missionId) )
+        
+        
+        for i in range(1, players+1):
+            if self.player == i: continue
+            self.c.execute('INSERT INTO MissionPoll VALUES(%i, %i, 0, 0)' % (int(missionId), i))
+        
+        self.con.commit()
+        #MissionPoll(missionId INT, player INT, vote INT, result INT)
+    
+    def assignNewMission(self, difficulty=1):
+    
+        # Get an available mission according to difficulty
+        self.c.execute("SELECT ROWID FROM Missions WHERE assigned == 0 and mission_level == %i  ORDER BY RANDOM() LIMIT 1" % (difficulty))
+        missionId =  self.c.fetchone()[0]
+        
+        self.c.execute('UPDATE Missions SET assigned = %i, status = 1 WHERE ROWID = %i' % ( self.player, missionId) )
+        self.con.commit()
+        return missionId
+    def getMissions(self, missionId=None):
+    
+        if not missionId:
+            self.c.execute("SELECT ROWID, mission_name, p1, p2, p3, p4, p1Color, p2Color, p3Color, p4Color, mission_points, mission_level, assigned, status FROM Missions WHERE assigned = %i" % self.player)
+        else:
+            self.c.execute("SELECT ROWID, mission_name, p1, p2, p3, p4, p1Color, p2Color, p3Color, p4Color, mission_points, mission_level, assigned, status FROM Missions WHERE ROWID = %i" % missionId)
+        missions = []
+        for r in self.c.fetchall():
+            m = {}
+            m['ROWID'] = r[0]
+            m['name'] = r[1]
+            m['p1'] = r[2]
+            m['p2'] = r[3]
+            m['p3'] = r[4]
+            m['p4'] = r[5]
+            m['p1Color'] = r[6]
+            m['p2Color'] = r[7]
+            m['p3Color'] = r[8]
+            m['p4Color'] = r[9]
+            m['mission_points'] = r[10]
+            m['mission_level'] = r[11]
+            m['assigned'] = r[12]
+            m['status'] = r[13]
+            missions.append(m)
+            
+        return missions
+        
+        
+    def canWeStartTheGame(self):
+        # Get the current Mission
+        #print 'Checking if game can start'
+        self.c.execute('SELECT meta_value from Settings WHERE meta_name = "Players"')
+        players = int(self.c.fetchone()[0])
+        playerAsMission = {}
+        for i in range(1, players+1):
+            playerAsMission[i] = False
+            
+            #self.c.execute("CREATE TABLE Missions(mission_name TEXT, p1 TEXT, p2 TEXT, p3 TEXT, p4 TEXT, p1Color INT, p2Color INT, p3Color INT, p4Color INT, mission_points INT, mission_level INT, assigned INT, status INT)")
+        
+        self.c.execute("SELECT ROWID, assigned, status FROM Missions")
+        for r in self.c.fetchall():
+            if int(r[1]) in playerAsMission.keys() and r[2] in [1, 2]:
+                playerAsMission[int(r[1])] = True
+        gameCanStart = True
+        for k in playerAsMission.keys():
+            if playerAsMission[k] == False:
+                gameCanStart=False
+        #print playerAsMission
+        if gameCanStart:
+            # Game can start
+            #new turn !
+            self.nextTurn()
+
+            
+    
+    
+    def currentPlay(self):
+        self.c.execute('SELECT meta_value from Settings WHERE meta_name = "CurrentPlay"')
+        data = self.c.fetchone()[0]
+        return data
+    def whichTurnIsIt(self):
+        # WHICH TURN
+        self.c.execute('SELECT meta_value from Settings WHERE meta_name = "CurrentPlayer"')
+        data = self.c.fetchone()[0]
+        return data
+        con.close()
+    def getLastKingMove(self):
+        self.c.execute('SELECT message, image_url, releaseTime from KingMoves ORDER BY releaseTime DESC LIMIT 1')
+        return self.c.fetchone()
+         
+    def nextTurn(self):
+        # NEXT TURN
+        self.c.execute('SELECT meta_value from Settings WHERE meta_name = "Players"')
+        players = int(self.c.fetchone()[0])
+        self.c.execute('SELECT meta_value from Settings WHERE meta_name = "CurrentPlayer"')
+        currentPlayer = int(self.c.fetchone()[0])
+        currentPlayer += 1
+        if currentPlayer > players:
+            currentPlayer = 1
+        self.c.execute('SELECT meta_value from Settings WHERE meta_name = "CurrentPlay"')
+        currentPlay = int(self.c.fetchone()[0])
+        currentPlay += 1
+        self.c.execute('UPDATE Settings SET meta_value="%s" WHERE meta_name="CurrentPlayer"' % currentPlayer)
+        self.c.execute('UPDATE Settings SET meta_value="%s" WHERE meta_name="CurrentPlayer"' % currentPlayer)
+        self.c.execute('UPDATE Settings SET meta_value="%s" WHERE meta_name="CurrentPlay"' % currentPlay)
+        
+        # Verifier que j'ai assez de cartes rois
+        
+        # Nouveau move du roi
+        self.c.execute('UPDATE KingMoves SET releaseTime="%i" WHERE ROWID=%i' % (time.time(), currentPlay))
+        #KingMoves(message TEXT, image_url TEXT, releaseTime INT)
+        
+        self.con.commit()
+        
+        
+    def populateKingMoves(self):
+        cardsProbability=[
+            # King useless
+            (3,    'reflects on the meaning of life'),
+            
+            # king moves
+            (1,     'the king moves to the closest corner'),
+            (1,     'the king moves to the further corner'),
+            (1,     'the king changes direction and moves'),
+            (1,     'the king is impatient and moves three times'),
+            
+            # Trust
+            (1,     'trusts everyone in his perpendicular vision'),
+            (1,     'trusts the bishops'),
+            (1,     'trusts his queen'),
+            (1,     'trusts the towers'),
+            (1,     'trusts the horses'),
+            (1,     'trusts everyone on black squares'),
+            (1,     'trusts everyone on white squares'),
+            (1,     'trusts everyone near the gates'),
+            (1,     'trusts everyone around him'),
+            
+            # Distrusts
+            (1,     'trusts no one in his perpendicular vision'),
+            (1,     'distrusts his queen'),
+            (1,     'distrusts the towers'),
+            (1,     'distrusts the horses'),
+            (1,     'distrusts the bishops'),
+            (1,     'distrusts everyone on black squares'),
+            (1,     'distrusts everyone on white squares'),
+            (1,     'distrusts everyone near the gates'),
+            (1,     'distrusts everyone around him'),
+            
+            
+            #Collective Action
+            (1,     'wants a bal! everyone move a piece in L'),
+            (1,     'is tired of his court, everyone bring 1 new subject'),            
+            (1,     'is agoraphobe, everyone take out 1 subject'),               
+            
+             
+            #Chances
+            (1,     'wants to see the queen'),
+            (1,     'wants to see the bishops'),
+            (1,     'wants to see the towers'),
+            (1,     'wants to see the horses'),
+            (1,     'exiles a figure'),
+            (1,     'exiles 2 pawns'),
+            (1,     'is sleeping, swap two figures'),
+            (1,     'wants a private audience, bring 2 near him'),
+            (1,     'feels generous, promote one pawn to a higher figure'),
+            (1,     'is trustful, change one piece to black'),           
+            (1,     'eared rumors, you change mission'),
+            (1,     'is sleeping in, you can perform one more action'),
+            (1,     'is drunk, a pawn uses the secret passageway under his throne '),
+            
+        
+        
+        ]
+        
+        cards = []
+        for c in cardsProbability:
+            for i in range(0,c[0]):
+                
+                #cards.append(c[1])
+                #moves
+                moves = True
+                if random.random() > .8: moves = False
+                
+                sentance = ''
+                if 'the king' in c[1]:
+                    sentance = c[1]
+                
+                else:
+                    if moves:
+                        sentance = "the king moves and " + c[1] 
+                    else:
+                        sentance = "the king " + c[1]
+                cards.append(sentance)
+        
+        random.shuffle(cards)
+        
+        for c in cards:
+            #KingMoves(message TEXT, image_url TEXT)
+            self.c.execute("INSERT INTO KingMoves VALUES('%s','',0)" % c)
+        self.con.commit()
+        
     def populateMissions(self):
         
            
@@ -126,190 +392,6 @@ class Bk:
             p4 = pieces[m[4]]
             
             
-            self.c.execute("INSERT INTO Missions VALUES('%s', %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, 0)" % (m[0], p1, p2, p3, p4, colors[0], colors[1], colors[2], colors[3], m[5], m[6]))
-        
-            
-    def canWeStartTheGame(self):
-        # Get the current Mission
-        print 'Checking if game can start'
-        self.c.execute('SELECT meta_value from Settings WHERE meta_name = "Players"')
-        players = int(self.c.fetchone()[0])
-        playerAsMission = {}
-        for i in range(1, players+1):
-            playerAsMission[i] = False
-        
-        self.c.execute("SELECT ROWID, objective_player, objective_status FROM Objective")
-        for r in self.c.fetchall():
-            if int(r[1]) in playerAsMission.keys() and r[2] in ['RUNNING', 'POOL']:
-                playerAsMission[int(r[1])] = True
-        gameCanStart = True
-        for k in playerAsMission.keys():
-            if playerAsMission[k] == False:
-                gameCanStart=False
-        print playerAsMission
-        if gameCanStart:
-            # Game can start
-            #new turn !
-            self.nextTurn()
-       
-    def getMissions(self):
-        
-        self.c.execute("SELECT ROWID, objective_mission, objective_question, objective_status FROM Objective WHERE objective_player = '%s'" % self.player)
-        return self.c.fetchall()
-        
-        
-    def getHint(self):
-        # GET HINT : ABANDON
-        return ''
-        self.c.execute("SELECT objective_hint FROM ObjectiveHints WHERE objective_player != '%s' ORDER BY RANDOM() LIMIT 1" % self.player)
-        return self.c.fetchone()[0]
-        
-        
-    
-    def getNewMission(self, difficulty=1):
-        missionOrder, missionQuestion, missionHints = self.createMission()
-        print 'New Mission :', missionOrder
-        self.c.execute("INSERT INTO Objective VALUES('%s', '%s','%s', 'RUNNING')" % (self.player, missionOrder, missionQuestion))
-        self.con.commit()
-        
-    def createMission(self,missionType=None, playerId=0):
-        # CREATE MISSION : ABANDON
-        figures = ["White King","White Queen","White Fool","White Horse","White Tower","White Peon","Black King","Black Queen","Black Fool","Black Horse","Black Tower","Black Peon"]
-        
-        if not missionType:
-            missionType = "meeting"
-        
-        if missionType =="meeting":
-            shuffle(figures)
-            missionOder = "Your mission is to have the <strong>%s</strong> met the <strong>%s</strong>" % (figures[0], figures[1])
-            missionQuestion = "As the <strong>%s</strong> met the <strong>%s</strong> ?" % (figures[0], figures[1])
-            missionHints = []
-            missionHints.append("Someone as to met the %s" % figures[0])
-            missionHints.append("The %s is having a secret meeting" % figures[1])
-            missionHints.append("Player %s is in a meeting mission" % playerId)
-        return (missionOder, missionQuestion, missionHints)
-    
-            
-    def populateKingMoves(self):
-        cardsProbability=[
-            # King useless
-            (3,    'reflects on the meaning of life'),
-            
-            # king moves
-            (1,     'the king moves to the closest corner'),
-            (1,     'the king moves to the further corner'),
-            (1,     'the king changes direction and moves'),
-            (1,     'the king is impatient and moves three times'),
-            
-            # Trust
-            (1,     'trusts everyone in his perpendicular vision'),
-            (1,     'trusts everyone in his diagonal vision'),
-            (1,     'trusts the bishops'),
-            (1,     'trusts his queen'),
-            (1,     'trusts the towers'),
-            (1,     'trusts the horses'),
-            (1,     'trusts everyone on black squares'),
-            (1,     'trusts everyone on white squares'),
-            (1,     'is trustful today, change one piece to black'),
-            
-            # Distrusts
-            (1,     'trusts no one in his perpendicular vision'),
-            (1,     'trusts no one in his diagonal vision'),
-            (1,     'distrusts his queen'),
-            (1,     'distrusts the towers'),
-            (1,     'distrusts the horses'),
-            (1,     'distrusts the bishops'),
-            (1,     'distrusts everyone near a door'),
-            (1,     'distrusts everyone on white squares'),
-            (1,     'distrusts everyone around him, he needs some fresh air'),
-            (1,     'distrusts everyone near the gates'),
-        
-            #Calls
-            (1,     'wants to see the queen, privately'),
-            (1,     'wants to confess. He call the bishops'),
-            (1,     'wants his bodyguards, the towers'),
-            (1,     'wants to hunt and need his horses'),
-            (1,     'wants some company and call three different people from his court'),
-            (1,     'is tired of his court, bring 2 new subjects into the palace'),
-            
-            #Exiles
-            (1,     'exiles a figure'),
-            (1,     'exiles 2 pawns'),
-        
-        
-            # Specials
-            (1,     'eared rumors, you change mission'),
-            (1,     'wants a bal! everyone move a piece in L'),
-            (1,     'is sleeping, exchange two figures'),
-        
-        
-        
-        ]
-        
-        cards = []
-        for c in cardsProbability:
-            for i in range(0,c[0]):
-                
-                #cards.append(c[1])
-                #moves
-                moves = True
-                if random.random() > .8: moves = False
-                
-                sentance = ''
-                if 'the king' in c[1]:
-                    sentance = c[1]
-                
-                else:
-                    if moves:
-                        sentance = "the king moves and " + c[1] 
-                    else:
-                        sentance = "the king " + c[1]
-                cards.append(sentance)
-        
-        random.shuffle(cards)
-        
-        for c in cards:
-            #KingMoves(message TEXT, image_url TEXT)
-            self.c.execute("INSERT INTO KingMoves VALUES('%s','',0)" % c)
-        self.con.commit()
-    
-    def currentPlay(self):
-        self.c.execute('SELECT meta_value from Settings WHERE meta_name = "CurrentPlay"')
-        data = self.c.fetchone()[0]
-        return data
-    def whichTurnIsIt(self):
-        # WHICH TURN
-        self.c.execute('SELECT meta_value from Settings WHERE meta_name = "CurrentPlayer"')
-        data = self.c.fetchone()[0]
-        return data
-        con.close()
-    def getLastKingMove(self):
-        self.c.execute('SELECT message, image_url, releaseTime from KingMoves ORDER BY releaseTime DESC LIMIT 1')
-        return self.c.fetchone()
-         
-    def nextTurn(self):
-        # NEXT TURN
-        self.c.execute('SELECT meta_value from Settings WHERE meta_name = "Players"')
-        players = int(self.c.fetchone()[0])
-        self.c.execute('SELECT meta_value from Settings WHERE meta_name = "CurrentPlayer"')
-        currentPlayer = int(self.c.fetchone()[0])
-        currentPlayer += 1
-        if currentPlayer > players:
-            currentPlayer = 1
-        self.c.execute('SELECT meta_value from Settings WHERE meta_name = "CurrentPlay"')
-        currentPlay = int(self.c.fetchone()[0])
-        currentPlay += 1
-        self.c.execute('UPDATE Settings SET meta_value="%s" WHERE meta_name="CurrentPlayer"' % currentPlayer)
-        self.c.execute('UPDATE Settings SET meta_value="%s" WHERE meta_name="CurrentPlayer"' % currentPlayer)
-        self.c.execute('UPDATE Settings SET meta_value="%s" WHERE meta_name="CurrentPlay"' % currentPlay)
-        
-        # Verifier que j'ai assez de cartes rois
-        
-        # Nouveau move du roi
-        self.c.execute('UPDATE KingMoves SET releaseTime="%i" WHERE ROWID=%i' % (time.time(), currentPlay))
-        #KingMoves(message TEXT, image_url TEXT, releaseTime INT)
-        
-        self.con.commit()
-        
+            self.c.execute("INSERT INTO Missions VALUES('%s', %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, 0, 0)" % (m[0], p1, p2, p3, p4, colors[0], colors[1], colors[2], colors[3], m[5], m[6]))
         
     

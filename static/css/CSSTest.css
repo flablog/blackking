@@ -1,0 +1,169 @@
+/* BLACK KING S MOOD CSS */
+
+
+/* Main elements and fonts */
+
+body {  
+    margin: 0; 
+    padding: 0; 
+    background:#232a3f;
+    font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+    font-weight: 300;
+    color:#fff;
+    text-align:center;
+    height:580px;
+}
+
+.blackText{
+    color:#000;
+}
+
+
+
+#container{
+    margin-left: auto; margin-right: auto;
+    margin:0 auto;
+    border: 0px solid;
+    display:inline-block;
+    background:#232a3f;
+    background-image: url(../img/bkg.svg);
+    background-repeat:no-repeat;
+    width:320px;
+    height:520px;
+    min-height:520px;
+    position:relative;
+    top:20px;
+}
+ 
+ 
+ /* Table header */
+ 
+ .windowHeader{
+    width:100%;
+    height:100px;
+    min-height:100px;
+    border:0px solid;
+ }
+ 
+ 
+ 
+ .tableHeader{
+    height:100px;
+    width:260px;
+    margin:0 auto;
+
+    border:0px solid;
+    border-collapse:collapse;
+    
+ }
+
+
+ .tableHeaderBorder{
+   width:80px;
+ }
+ 
+ .tableHeaderCenter{
+   width:100px;
+   background-image: url(../img/menuSquareBigOrange.svg);
+ }
+ 
+ .tableHeaderBorderRed{
+    background-image: url(../img/menuSquareMediumRed.svg);
+ }
+ .tableHeaderBorderBlack{
+    background-image: url(../img/menuSquareMediumBlack.svg);
+    
+ }
+ 
+ 
+ 
+/* Current mission */ 
+  
+
+.missionTable{
+    height:60px;
+    width:140px;
+    margin:0 auto;
+
+    border:0px solid;
+    border-collapse:collapse;
+    
+    
+ }
+ 
+ .missionTd{
+    width:35px;
+ }
+ #CurrentMissionDiv{
+    position:relative;
+    top:10px;
+ }
+ 
+ .missionBlackSquare{
+    background-image: url(../img/missionSquare_0.svg);
+ }
+  .missionWhiteSquare{
+    background-image: url(../img/missionSquare_1.svg);
+ }
+  .missionMixSquare{
+    background-image: url(../img/missionSquare_2.svg);
+ }
+ 
+ #MissionDoneButton{
+    background-color:#000;
+    color:#fff;
+    border-radius: 10px;
+    padding-left:5px;
+    padding-right:5px;
+ }
+ 
+/* King's order */ 
+
+.KingsOrderDiv{
+    position:relative;
+    top:20px;
+    height:180px;
+    font-size:.95em;
+ }
+ 
+ #ImageKingDiv{
+    margin:0 auto;
+    height:160px;
+    width:200px;
+    border:0px solid;
+ }
+ 
+
+/* Scores  */
+
+.Scores{
+    margin:0 auto;
+    color:#fff;
+    font-size:.8em;
+    position:absolute;
+    bottom:40px;
+    left:107px;
+}
+.scoreTable{
+    margin:0 auto;
+    border:0px solid;
+    border-collapse:collapse;
+}
+.scoreTd{
+    width:25px;
+    height:24px;
+
+}
+ 
+   .scoreRouge{
+    background-image: url(../img/menuSquareSmallRed.svg);
+ }
+ .scoreVert{
+    background-image: url(../img/menuSquareSmallGreen.svg);
+ }
+ .scoreBleu{
+    background-image: url(../img/menuSquareSmallBlue.svg);
+ }
+ .scoreOrange{
+    background-image: url(../img/menuSquareSmallOrange.svg);
+ }

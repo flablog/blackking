@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<svg width="320" height="200" xmlns="http://www.w3.org/2000/svg">
+
+    <path id="top" d="M160 0 L210 50 L160 100 L110 50 Z"  stroke-width="0" stroke="#f00" fill="#000"/>
+    
+    <path id="gauche" d="M110 50 L160 100 L110 150 L60 100 Z"  stroke-width="0" stroke="#f00" fill="#c6b9b2"/>
+    
+     <path id="gauche" d="M210 50 L260 100 L210 150 L160 100 Z"  stroke-width="0" stroke="#f00" fill="#8a766b"/>
+    
+    <path id="bottom" d="M160 100 L210 150 L160 200 L110 150 Z"  stroke-width="0" stroke="#f00" fill="#19005f"/>
+  
+</svg>

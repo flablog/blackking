@@ -1,0 +1,141 @@
+{% autoescape None %}
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:fb="http://ogp.me/ns/fb#">
+
+
+{% block head %}
+<head>
+    <title>
+        {% block title %}Black King's mood{% end %}
+    </title>
+    {% block css %}
+        <link rel="stylesheet" href="/static/css/bk_basic.css" />
+    {%end%}
+    {% block app_css %}
+    
+    {% end %}
+    {% block js %}
+        <script src="/static/js/jquery-2.0.2.min.js" type="text/javascript"></script>
+    {%end%}
+    {% block app_js %}
+    
+    {% end %}
+    
+    {% block header %}
+        <!-- force l'affichage a la bonne taille dans les navigateur mobiles :-->
+        <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
+    {% end %}
+    {% block app_header %}
+    {% end %}
+
+
+</head>
+{% end %}
+
+
+
+<body>
+    
+    <div id="container">
+    {% block container %}
+        {% block appHeader %}
+        <div class="windowHeader">
+            {% block appHeaderTable %}
+            <table class="tableHeader">
+                <tr>
+                    <td class="tableHeaderBorder tableHeaderBorderBlack">
+                    Menu
+                    </td>
+                    <td class="tableHeaderCenter">
+                    My Points<br/>
+                    <strong>12</strong>
+                    </td>
+                    <td class="tableHeaderBorder tableHeaderBorderRed">
+                    end turn
+                    </td>
+                </tr>
+            </table>
+            {% end %}
+        </div> <!-- windowHeader -->
+        {% end %}
+        
+        {% block appMission %}
+        <div class="missionDiv blackText">
+            {% block appMissionTable %}
+            <table class="missionTable">
+                <tr>
+                    <td class="missionTd missionBlackSquare">
+                        <img src="/static/img/testCss/pion_F.svg"/>
+                    </td>
+                    <td class="missionTd missionMixSquare">
+                        <img src="/static/img/testCss/pion_R.svg"/>
+                    </td>
+                    <td class="missionTd missionWhiteSquare">
+                        <img src="/static/img/testCss/pion_P.svg"/>
+                    </td>
+                    <td class="missionTd missionMixSquare">
+                        <img src="/static/img/testCss/pion_C.svg"/>
+                    </td>
+                    
+                </tr>
+            </table>
+            {% end %}
+            {% block appMissionButton %}
+            <div id="CurrentMissionDiv">
+                <span id="MissionDoneButton">Mission complete ?</span>
+            </div>
+            {% end %}
+        </div> <!-- missionDiv -->
+        {% end %}
+            
+        {% block appKingsOrder %}
+        <div class="KingsOrderDiv blackText">
+        
+            KING'S ORDER<br/>
+            The king doesn't trust his knights anymore !
+            
+            <div id="ImageKingDiv"><img src="/static/img/kingMoods/king_1.svg"/></div>
+            
+        </div><!-- King's order -->
+        {% end %}
+
+        {% block appScores %}   
+        <div class="Scores">
+            {% block appScoresTable %}  
+            <table class="scoreTable">
+                <tr>
+                    <td class="scoreTd scoreRouge">
+                        0
+                    </td>
+                    <td class="scoreTd scoreVert">
+                    3
+                    </td>
+                    <td class="scoreTd scoreBleu">
+                    9
+                    </td>
+                    <td class="scoreTd scoreOrange">
+                    12
+                    </td>
+                    
+                </tr>
+            </table>
+            {% end %}
+
+        </div><!-- Scores -->
+        {% end %}
+    {% end %}
+    </div> <!-- container -->
+    
+</body>
+
+<!-- 
+Black King's mood
+a game by Caravel Collective
+facebook.com/caravelcollective
+caravelcollective.com
+--> 
+
+</html>
+
+

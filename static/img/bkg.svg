@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<svg width="320" height="520" xmlns="http://www.w3.org/2000/svg">
+ <rect x="0" y="0" width="320" height="520" fill="#232a3f"/>
+  
+   <!-- Grand rectangle Orange -->
+  <path id="svg_2" d="M110 50 L210 50 L320 160 L320 360 L160 520 L0 360 L0 160 Z"  stroke-width="0" stroke="#000000" fill="#fff"/>
+  
+</svg>
+

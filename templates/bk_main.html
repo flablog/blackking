@@ -1,0 +1,65 @@
+{% extends "bk_basic.html" %}
+
+
+{% block app_css %}
+    <link rel="stylesheet" href="/static/css/bk_main.css" />
+{% end %}
+
+{% block app_js %}
+        <script src="/static/js/bk_main.js" type="text/javascript"></script>
+    {%end%}
+
+
+{% block container %}
+    
+    
+    
+    <div id="bk_main_topMenu" class="boldText">
+    
+        <div id="bk_main_topMenu_haut">The<br/>Black<br/>King</div>
+        
+        <div id="bk_main_topMenu_left" class="goTo" toUrl="/credits">Credits</div>
+        
+        <div id="bk_main_topMenu_right" class="goTo" toUrl="/help">Help</div>
+        
+        <div id="bk_main_topMenu_bottom"><strong>PLAY!</strong></div>
+    
+    </div>
+    
+    
+    <div id="bk_main_play" class="notDisplayed">
+    
+        <table  id="bk_main_play_table">
+        
+            <tr>
+                <td id="bk_main_play_joinTd" class="boldText goTo" toUrl="/join">
+                    JOIN
+                </td>
+                <td colspan = "2" class="blackText">
+                    Join a game!
+                </td>
+            </tr>
+            <tr>
+                <td colspan = "2" class="blackText ">
+                    Create a new game!
+                </td>
+                <td id="bk_main_play_newTd" class="boldText goTo"  toUrl="/new">
+                    NEW
+                </td>
+            
+            </tr>
+        
+        </table>
+    
+    </div>
+    
+    <div id="intro" class="blackText">
+    <p>The king is having a moody day.<br/>Try to get his favors!<p/>
+    <p>Grab some friends with their own device (smartphone, tablet or laptop) and a Chess board game and use our new rules and instructions!</p>
+    
+    </div>
+    
+    
+    
+{% end %}
+   

@@ -34,7 +34,11 @@
             -->
                     <p><span id="TURN">Is it my turn ?</span></p>
                     
+                    <div id="KINGMOVE" lastMove="0">
                     
+                        <div class="alert alert-info"><span id="KINGMOVE_MSG">Let's see, where is the king?<span></div>
+                    
+                    </div>
                     <div id="POLLS">
                     
                     
@@ -42,14 +46,17 @@
                     <div id="NEWMISSION">
                     
                     </div>
-                    <div id="KINGMOVE" lastMove="0">
                     
-                    <div class="alert alert-info"><span id="KINGMOVE_MSG">Let's see, where is the king?<span></div>
-                    
-                    </div>
                     <div id="MISSIONS">
                     
+                    
+                    <!--
+                    <div class="missionDiv" id="mission_0" missionId="0" missionStatus="0">
+                        <div class="alert alert-warning">This is a mission</div>
                     </div>
+                    -->
+                    </div>
+                    
                     <div id="INFOS">
                     
                     </div>
@@ -67,7 +74,8 @@
        </div>
         -->
         
-        <p>Hello player {{ playerId }}! <span id="currentTurn" currentTurn="42">Waiting to start the game?</span></p>
+        <p>Hello player {{ playerId }}! <span id="currentTurn" currentTurn="42">Waiting to start the game?</span><br/>Score :</p>
+        <div id="SCORE"></div>
         
         
         </div>
